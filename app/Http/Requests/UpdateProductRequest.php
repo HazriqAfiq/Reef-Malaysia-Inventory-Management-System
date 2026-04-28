@@ -30,9 +30,9 @@ class UpdateProductRequest extends FormRequest
             'top_note'        => ['nullable', 'string'],
             'heart_note'      => ['nullable', 'string'],
             'base_note'       => ['nullable', 'string'],
-            'wholesale_price' => ['required', 'numeric', 'min:0'],
-            'retail_price'    => ['required', 'numeric', 'min:0'],
-            'stock'           => ['required', 'integer', 'min:0'],
+            'wholesale_price' => ['nullable', 'numeric', 'min:0'],
+            'retail_price'    => ['nullable', 'numeric', 'min:0'],
+            'stock'           => ['nullable', 'integer', 'min:0'],
             'release_date'    => ['nullable', 'date'],
             'is_active'       => ['nullable', 'boolean'],
             'promotion_type'      => ['nullable', 'string', 'in:discount_percent,bogo'],
@@ -40,6 +40,10 @@ class UpdateProductRequest extends FormRequest
             'promotion_badge'     => ['nullable', 'string', 'max:50'],
             'promotion_starts_at' => ['nullable', 'date'],
             'promotion_ends_at'   => ['nullable', 'date', 'after_or_equal:promotion_starts_at'],
+            'images'              => ['nullable', 'array'],
+            'images.*'            => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'delete_images'       => ['nullable', 'array'],
+            'delete_images.*'     => ['integer', 'exists:product_images,id'],
         ];
     }
 }

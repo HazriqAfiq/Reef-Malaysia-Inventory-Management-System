@@ -1,6 +1,6 @@
 <x-app-layout title="Edit Product">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
         <a href="{{ route('admin.products.index') }}"
            class="inline-flex items-center gap-1.5 text-[13px] font-bold text-gray-400 hover:text-gray-700 mb-6 transition-all duration-200 hover:-translate-x-1">
@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="p-8 space-y-8">
+            <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-8">
                 @csrf
                 @method('PUT')
 
@@ -74,6 +74,159 @@
                                 @endforeach
                             </select>
                         </div>
+                    </div>
+                </div>
+
+                {{-- ── Images ────────────────────────────────────────── --}}
+                <div x-data="{ 
+                    deletedImages: [],
+                    newPreviews: [],
+                    primaryType: '{{ $product->primaryImage ? 'existing' : 'none' }}',
+                    primaryId: {{ $product->primaryImage->id ?? 'null' }},
+                    primaryIndex: 0,
+                    dataTransfer: new DataTransfer(),
+                    handleNewFiles(event) {
+                        const files = Array.from(event.target.files);
+                        
+                        files.forEach((file) => {
+                            this.dataTransfer.items.add(file);
+                            const reader = new FileReader();
+                            const previewIndex = this.newPreviews.length;
+                            this.newPreviews.push({ url: '', name: file.name });
+                            
+                            reader.onload = (e) => {
+                                this.newPreviews[previewIndex].url = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        });
+
+                        this.$refs.fileInput.files = this.dataTransfer.files;
+
+                        if (files.length > 0 && this.primaryType === 'none') {
+                            this.primaryType = 'new';
+                            this.primaryIndex = 0;
+                        }
+                    },
+                    setPrimary(type, identifier) {
+                        this.primaryType = type;
+                        if (type === 'existing') this.primaryId = identifier;
+                        else this.primaryIndex = identifier;
+                    }
+                }">
+                    <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-5 border-b border-gray-100 pb-2">Product Images</h2>
+                    
+                    @if($errors->has('delete_images') || $errors->has('images') || $errors->has('images.*'))
+                        <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                            @foreach ($errors->get('delete_images') as $message) <p class="text-xs font-bold text-red-600">{{ $message }}</p> @endforeach
+                            @foreach ($errors->get('images') as $message) <p class="text-xs font-bold text-red-600">{{ $message }}</p> @endforeach
+                            @foreach ($errors->get('images.*') as $message) <p class="text-xs font-bold text-red-600">{{ $message }}</p> @endforeach
+                        </div>
+                    @endif
+                    
+                    {{-- All Images Grid (Existing + New) --}}
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+                        {{-- Existing Images --}}
+                        @foreach($product->images as $image)
+                            <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300"
+                                 x-show="!deletedImages.includes({{ $image->id }})"
+                                 :class="primaryType === 'existing' && primaryId === {{ $image->id }} ? 'border-blue-600 ring-4 ring-blue-500/10' : 'border-gray-100 hover:border-gray-300'">
+                                <img src="{{ asset('storage/' . $image->image_path) }}" class="w-full h-full object-cover" @click="setPrimary('existing', {{ $image->id }})">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-4">
+                                    <button type="button" x-show="!(primaryType === 'existing' && primaryId === {{ $image->id }})"
+                                            @click="setPrimary('existing', {{ $image->id }})" 
+                                            class="w-full py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-colors">
+                                        Set as Primary
+                                    </button>
+                                    <button type="button" @click="
+                                        deletedImages.push({{ $image->id }}); 
+                                        if(primaryType === 'existing' && primaryId === {{ $image->id }}) {
+                                            primaryType = 'none';
+                                            // Auto-fallback: try to find another existing image
+                                            @foreach($product->images as $other)
+                                                if (!deletedImages.includes({{ $other->id }})) {
+                                                    primaryType = 'existing';
+                                                    primaryId = {{ $other->id }};
+                                                }
+                                            @endforeach
+                                            // If still none, try new previews
+                                            if (primaryType === 'none' && newPreviews.length > 0) {
+                                                primaryType = 'new';
+                                                primaryIndex = 0;
+                                            }
+                                        }
+                                    " class="w-full py-2 bg-white text-red-600 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-50 transition-colors">
+                                        Delete Image
+                                    </button>
+                                </div>
+                                <div x-show="primaryType === 'existing' && primaryId === {{ $image->id }}" class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
+                                    Primary
+                                </div>
+                                <input type="checkbox" name="delete_images[]" value="{{ $image->id }}" class="hidden" :checked="deletedImages.includes({{ $image->id }})">
+                            </div>
+                        @endforeach
+
+                        {{-- New Previews --}}
+                        <template x-for="(preview, index) in newPreviews" :key="index">
+                            <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300"
+                                 :class="primaryType === 'new' && primaryIndex === index ? 'border-blue-600 ring-4 ring-blue-500/10' : 'border-gray-100 hover:border-gray-300'">
+                                <img :src="preview.url" class="w-full h-full object-cover" @click="setPrimary('new', index)">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-4">
+                                    <button type="button" x-show="!(primaryType === 'new' && primaryIndex === index)"
+                                            @click="setPrimary('new', index)" 
+                                            class="w-full py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-colors">
+                                        Set as Primary
+                                    </button>
+                                    <button type="button" @click="
+                                        newPreviews.splice(index, 1);
+                                        const dt = new DataTransfer();
+                                        Array.from(dataTransfer.files).filter((_, i) => i !== index).forEach(f => dt.items.add(f));
+                                        dataTransfer = dt;
+                                        $refs.fileInput.files = dataTransfer.files;
+                                        if(primaryType === 'new' && primaryIndex === index) {
+                                            primaryType = 'none';
+                                            // Fallback to existing
+                                            @foreach($product->images as $other)
+                                                if (!deletedImages.includes({{ $other->id }})) {
+                                                    primaryType = 'existing';
+                                                    primaryId = {{ $other->id }};
+                                                }
+                                            @endforeach
+                                            // If no existing, fallback to another new
+                                            if (primaryType === 'none' && newPreviews.length > 0) {
+                                                primaryType = 'new';
+                                                primaryIndex = 0;
+                                            }
+                                        }
+                                        else if(primaryType === 'new' && primaryIndex > index) primaryIndex--;
+                                    " class="w-full py-2 bg-white text-red-600 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-50 transition-colors">
+                                        Remove
+                                    </button>
+                                </div>
+                                <div x-show="primaryType === 'new' && primaryIndex === index" class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
+                                    Primary
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Upload New Area --}}
+                    <div class="bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-3xl p-10 flex flex-col items-center justify-center text-center group hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300">
+                        <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15m10.5-11.25L3 3m0 0l18 18M3 3l18 18" />
+                            </svg>
+                        </div>
+                        <p class="text-[14px] font-bold text-gray-700 mb-1">Add More Photos</p>
+                        <p class="text-[12px] text-gray-400 mb-6">Select new images (JPG, PNG, WEBP). Click any image (old or new) to set as primary.</p>
+                        
+                        <input type="file" name="images[]" multiple accept="image/*" @change="handleNewFiles" x-ref="fileInput"
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:text-[12px] file:font-black file:uppercase file:tracking-widest file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer">
+                        
+                        <input type="hidden" name="primary_type" :value="primaryType">
+                        <input type="hidden" name="primary_id" :value="primaryId">
+                        <input type="hidden" name="primary_index" :value="primaryIndex">
+                        
+                        @error('images.*')<p class="mt-2 text-xs font-semibold text-red-500">{{ $message }}</p>@enderror
                     </div>
                 </div>
 

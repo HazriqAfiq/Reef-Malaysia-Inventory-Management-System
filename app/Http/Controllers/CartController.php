@@ -75,7 +75,20 @@ class CartController extends Controller
             ];
         }
 
-        return view('storefront.cart', compact('cartData', 'total', 'originalTotal', 'totalDiscount'));
+        $variantIds = array_keys($cart);
+        $selectedItems = session()->get('selected_cart_items', $variantIds);
+
+        return view('storefront.cart', compact('cartData', 'total', 'originalTotal', 'totalDiscount', 'variantIds', 'selectedItems'));
+    }
+
+    /**
+     * Update selected items for checkout
+     */
+    public function updateSelection(Request $request)
+    {
+        $selectedIds = $request->input('selected_ids', []);
+        session()->put('selected_cart_items', $selectedIds);
+        return response()->json(['success' => true]);
     }
 
     /**

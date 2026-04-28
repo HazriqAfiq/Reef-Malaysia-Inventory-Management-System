@@ -16,6 +16,10 @@ class ScentFinderController extends Controller
 
     public function results(Request $request)
     {
+        if ($request->isMethod('get') && !$request->has('answers')) {
+            return redirect()->route('storefront.scent-finder');
+        }
+
         $validated = $request->validate([
             'answers.vibe' => 'nullable|in:fresh,woody,floral',
             'answers.time' => 'nullable|in:day,night',
@@ -57,7 +61,7 @@ class ScentFinderController extends Controller
             $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%amber%' THEN 1 ELSE 0 END)";
         }
 
-        $query = Product::active()->with(['variants', 'images']);
+        $query = Product::active()->with(['variants', 'images'])->withSum('sales', 'quantity');
 
         if (count($scoringClauses) > 0) {
             $scoreExpression = implode(' + ', $scoringClauses);
@@ -73,6 +77,7 @@ class ScentFinderController extends Controller
         if ($recommendations->isEmpty() && count($answers) > 0) {
             $recommendations = Product::active()
                 ->with(['variants', 'images'])
+                ->withSum('sales', 'quantity')
                 ->latest('id')
                 ->limit(4)
                 ->get();

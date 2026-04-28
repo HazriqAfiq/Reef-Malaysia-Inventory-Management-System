@@ -43,14 +43,23 @@
                                     <label class="block text-sm font-black text-gray-800 mb-2 capitalize">{{ str_replace(['_', 'promotions '], [' ', ''], $setting->key) }}</label>
                                     
                                     @if($setting->type === 'image')
-                                        @if($setting->value)
-                                            <div class="mb-3">
-                                                <div class="h-32 w-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
-                                                    <img src="{{ asset('storage/' . $setting->value) }}" alt="{{ $setting->key }}" class="h-full w-full object-cover">
+                                        @php
+                                            $aspectRatio = str_contains($setting->key, 'hero_image') ? 'aspect-[21/9]' : 'aspect-video';
+                                        @endphp
+                                        <div x-data="{ preview: '{{ $setting->value ? (str_contains($setting->value, 'http') ? $setting->value : asset('storage/' . $setting->value)) : '' }}' }" class="space-y-4">
+                                            <div x-show="preview" class="relative group">
+                                                <div class="{{ $aspectRatio }} w-full max-w-2xl rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center shadow-sm transition-all duration-300 group-hover:border-blue-300">
+                                                    <img :src="preview" class="h-full w-full object-cover">
                                                 </div>
                                             </div>
-                                        @endif
-                                        <input type="file" name="{{ $setting->key }}" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                            <div x-show="!preview" class="{{ $aspectRatio }} w-full max-w-2xl rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 bg-gray-50/30">
+                                                <svg class="w-10 h-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                <span class="text-[10px] font-black uppercase tracking-widest">No Image Selected</span>
+                                            </div>
+                                            <input type="file" name="{{ $setting->key }}" accept="image/*" 
+                                                   @change="if($event.target.files[0]) preview = URL.createObjectURL($event.target.files[0])"
+                                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:text-[11px] file:font-black file:uppercase file:tracking-widest file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer">
+                                        </div>
                                         
                                     @elseif($setting->type === 'textarea')
                                         <textarea name="{{ $setting->key }}" rows="3" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ old($setting->key, $setting->value) }}</textarea>

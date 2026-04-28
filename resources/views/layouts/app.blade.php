@@ -132,7 +132,9 @@
                                 <a href="{{ route('admin.settings.page', ['page' => 'collection']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/collection') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">Collection</a>
                                 <a href="{{ route('admin.settings.page', ['page' => 'new_arrivals']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/new_arrivals') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">New Arrivals</a>
                                 <a href="{{ route('admin.settings.page', ['page' => 'best_sellers']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/best_sellers') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">Best Sellers</a>
+                                <a href="{{ route('admin.settings.page', ['page' => 'scent_finder']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/scent_finder') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">Scent Finder Discovery</a>
                                 <a href="{{ route('admin.settings.page', ['page' => 'promotions']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/promotions') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">Promotions Configuration</a>
+                                <a href="{{ route('admin.settings.page', ['page' => 'auth']) }}" class="block py-2 text-[12px] font-semibold {{ request()->is('admin/settings/auth') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900' }}">Authentication</a>
                             </div>
                         </div>
                     </div>

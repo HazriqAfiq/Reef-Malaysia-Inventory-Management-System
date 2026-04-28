@@ -41,6 +41,14 @@ class StorefrontSettingsSeeder extends Seeder
             ['key' => 'promotions_title', 'value' => 'Exclusive Promos', 'type' => 'text', 'group' => 'promotions'],
             ['key' => 'promotions_description', 'value' => 'Discover our latest promotional events and seasonal discounts.', 'type' => 'textarea', 'group' => 'promotions'],
             ['key' => 'promotions_hero_image', 'value' => 'hero/shop_banner_cinematic.png', 'type' => 'image', 'group' => 'promotions'],
+
+            // Scent Finder Settings
+            ['key' => 'scent_finder_hero_image', 'value' => 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000', 'type' => 'image', 'group' => 'scent_finder'],
+            ['key' => 'scent_finder_results_hero_image', 'value' => 'https://images.unsplash.com/photo-1557170334-a9632e77c6e4?auto=format&fit=crop&q=80&w=2000', 'type' => 'image', 'group' => 'scent_finder'],
+
+            // Auth Settings
+            ['key' => 'sign_in_image', 'value' => 'hero/hero_cinematic.png', 'type' => 'image', 'group' => 'auth'],
+            ['key' => 'sign_up_image', 'value' => 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1974&auto=format&fit=crop', 'type' => 'image', 'group' => 'auth'],
         ];
 
         foreach ($settings as $setting) {

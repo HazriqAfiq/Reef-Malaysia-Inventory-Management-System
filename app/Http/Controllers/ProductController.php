@@ -101,6 +101,18 @@ class ProductController extends Controller
                 $product->update(['stock' => collect($request->input('variants'))->sum('stock')]);
             }
 
+            // Handle Images
+            if ($request->hasFile('images')) {
+                $primaryIndex = (int) $request->input('primary_index', 0);
+                foreach ($request->file('images') as $index => $file) {
+                    $path = $file->store('products', 'public');
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'is_primary' => $index === $primaryIndex,
+                    ]);
+                }
+            }
+
             \App\Models\ActivityLog::log(
                 'product_created',
                 $product,
@@ -108,7 +120,7 @@ class ProductController extends Controller
                 $request->all()
             );
 
-            return redirect()->route('admin.products.index')->with('success', 'Product and variants added successfully.');
+            return redirect()->route('admin.products.index')->with('success', 'Product, variants, and images added successfully.');
         });
     }
 
@@ -160,12 +172,55 @@ class ProductController extends Controller
                 }
             }
 
+            // Handle Image Deletions
+            if ($request->has('delete_images')) {
+                foreach ($request->input('delete_images') as $imageId) {
+                    $image = $product->images()->find($imageId);
+                    if ($image) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($image->image_path);
+                        $image->delete();
+                    }
+                }
+            }
+
+            // Handle Primary Image Selection
+            $primaryType = $request->input('primary_type');
+            if ($primaryType === 'existing') {
+                $primaryId = $request->input('primary_id');
+                $product->images()->update(['is_primary' => false]);
+                $product->images()->where('id', $primaryId)->update(['is_primary' => true]);
+            }
+
+            // Handle New Image Uploads
+            if ($request->hasFile('images')) {
+                // If primary was set to existing above, any new images will be non-primary
+                // Unless primaryType is 'new'
+                $primaryIndex = ($primaryType === 'new') ? (int) $request->input('primary_index', 0) : -1;
+                
+                if ($primaryType === 'new') {
+                    $product->images()->update(['is_primary' => false]);
+                }
+
+                foreach ($request->file('images') as $index => $file) {
+                    $path = $file->store('products', 'public');
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'is_primary' => $index === $primaryIndex,
+                    ]);
+                }
+            }
+
+            // Fallback: If no primary exists (all deleted), set the first available as primary
+            if (!$product->images()->where('is_primary', true)->exists() && $product->images()->exists()) {
+                $product->images()->first()->update(['is_primary' => true]);
+            }
+
             $product->refresh();
 
             \App\Models\ActivityLog::log(
                 'product_updated',
                 $product,
-                "Updated product details and variants for {$product->name}",
+                "Updated product details, variants, and images for {$product->name}",
                 ['changes' => $request->all()]
             );
 
@@ -175,7 +230,7 @@ class ProductController extends Controller
                 NotificationService::outOfStock($product);
             }
 
-            return redirect()->route('admin.products.index')->with('success', 'Product and variants updated successfully.');
+            return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
         });
     }
 

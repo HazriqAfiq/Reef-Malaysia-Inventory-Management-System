@@ -30,9 +30,11 @@
                     {{ $pageSubtitle ?? 'Timeless Scents. Curated for You.' }}
                 </p>
             </div>
+
+            <x-scroll-indicator />
         </header>
 
-        <div class="w-full px-4 sm:px-8 xl:px-16 py-12">
+        <div class="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-16">
             <!-- ── REFINED TOP BAR ────────────────────────── -->
             <div class="flex flex-col sm:flex-row justify-between items-center mb-16 pb-8 border-b border-gray-100 gap-8">
                 <div class="flex items-center gap-12">

@@ -3,8 +3,11 @@
     {{-- ── PAGE TITLE ────────────────────────────────────────────────────── --}}
     <div class="mb-14 pb-10 border-b border-gray-100 flex justify-between items-end">
         <div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5em] mb-3">Saved Items</p>
-            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 leading-none tracking-tight">Wishlist</h2>
+            <div class="inline-flex items-center gap-6">
+                <p class="w-8 md:w-12 h-[1px] bg-black opacity-10"></p>
+                <h2 class="text-3xl md:text-4xl font-light tracking-[0.2em] text-gray-900 leading-none uppercase">Wishlist</h2>
+                <p class="w-8 md:w-12 h-[1px] bg-black opacity-10"></p>
+            </div>
         </div>
         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-1">
             {{ $wishlistItems->count() }} {{ Str::plural('Item', $wishlistItems->count()) }}
@@ -19,7 +22,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2 tracking-tight">Your wishlist is empty</h3>
+            <h3 class="text-xl font-light text-gray-900 mb-2 uppercase tracking-[0.1em]">Your wishlist is empty</h3>
             <p class="text-[13px] text-gray-400 font-medium mb-8 max-w-xs mx-auto leading-relaxed">Save your favorite fragrances to keep track of them and receive stock updates.</p>
             <a href="{{ route('storefront.collection') }}" 
                class="inline-flex items-center px-10 py-4 bg-black text-white text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-gray-800 transition-colors">

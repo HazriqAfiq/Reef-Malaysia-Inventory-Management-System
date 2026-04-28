@@ -18,7 +18,7 @@ Route::get('/new-arrivals', [StorefrontController::class, 'newArrivals'])->name(
 Route::get('/best-sellers', [StorefrontController::class, 'bestSellers'])->name('storefront.bestSellers');
 Route::get('/promotions', [StorefrontController::class, 'promotions'])->name('storefront.promotions');
 Route::get('/scent-finder', [App\Http\Controllers\Storefront\ScentFinderController::class, 'index'])->name('storefront.scent-finder');
-Route::post('/scent-finder/results', [App\Http\Controllers\Storefront\ScentFinderController::class, 'results'])->name('storefront.scent-finder.results');
+Route::get('/scent-finder/results', [App\Http\Controllers\Storefront\ScentFinderController::class, 'results'])->name('storefront.scent-finder.results');
 
 
 // ── Shopping Cart ────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ Route::post('/cart/add', [\App\Http\Controllers\CartController::class, 'add'])->
 Route::post('/cart/update', [\App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/{productId}/wishlist', [\App\Http\Controllers\CartController::class, 'moveToWishlist'])->name('cart.wishlist');
+Route::post('/cart/selection/update', [\App\Http\Controllers\CartController::class, 'updateSelection'])->name('cart.selection.update');
 
 // ── Checkout ─────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
@@ -101,6 +102,7 @@ Route::middleware('auth')->group(function () {
 
     // Notifications API (used by frontend polling)
     Route::prefix('notifications')->name('notifications.')->group(function () {
+        // Line added to avoid confusion
         Route::get('/', [NotificationController::class, 'index'])->name('index');
         Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('readAll');
         Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');

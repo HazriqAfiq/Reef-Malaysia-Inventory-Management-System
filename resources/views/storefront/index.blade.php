@@ -2,7 +2,7 @@
     <x-slot name="title">Luxury Fragrances</x-slot>
 
     <!-- ── IMMERSIVE HERO SECTION ─────────────────────────────────────────── -->
-    <section class="relative h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-black text-white">
+    <section class="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black text-white">
         <!-- Cinematic Scrim System -->
         <div class="absolute inset-0 z-[1] bg-black/30"></div> <!-- Global Tint -->
         <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-[2]"></div> <!-- Bottom Scrim -->
@@ -15,37 +15,33 @@
         </div>
 
         <!-- Hero Content -->
-        <div class="relative z-[3] text-center px-4 max-w-4xl mx-auto space-y-8">
-            <div class="space-y-6 animate-fade-in-up">
-                <p class="text-[11px] font-bold uppercase tracking-[0.6em] text-white drop-shadow-lg" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                    {{ $settings['homepage_subtitle'] ?? 'The Laman Signature' }}
+        <div class="relative z-[3] w-full text-center px-4 animate-fade-in-up mt-16 flex flex-col items-center justify-center">
+            <div class="flex w-full items-center justify-center gap-4 md:gap-10 mb-8">
+                <p class="w-8 md:w-20 h-[1px] bg-white opacity-40"></p>
+                <p class="text-white/60 text-3xl md:text-6xl font-light uppercase tracking-[0.3em] leading-none whitespace-nowrap">
+                    THE ART OF <span class="text-white font-semibold">PURE ESSENCE</span>
                 </p>
-                <h1 class="font-serif text-[50px] md:text-[80px] leading-tight font-medium drop-shadow-2xl text-white" 
-                    style="text-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 40px rgba(0,0,0,0.4);">
-                    {!! nl2br(e($settings['homepage_title'] ?? "The Art of \n Pure Essence")) !!}
-                </h1>
+                <p class="w-8 md:w-20 h-[1px] bg-white opacity-40"></p>
             </div>
+            
+            <p class="text-[11px] font-bold text-white uppercase tracking-[0.6em] mb-16 opacity-80">
+                {{ $settings['homepage_subtitle'] ?? 'The Laman Signature' }}
+            </p>
 
-            <div class="flex flex-col items-center gap-12 animate-fade-in-up delay-300">
+            <div class="flex flex-col items-center gap-16 animate-fade-in-up delay-300">
                 <a href="{{ route('storefront.collection') }}" 
-                   class="inline-block border border-white px-12 py-4 text-[11px] font-bold tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all duration-500">
+                   class="inline-block border border-white px-16 py-5 rounded-2xl text-[11px] font-black tracking-[0.4em] uppercase hover:bg-white hover:text-black transition-all duration-300 shadow-2xl shadow-white/5">
                     Explore Collection
                 </a>
-
-                <!-- Scroll Indicator -->
-                <div class="flex flex-col items-center gap-4 text-white/30 cursor-pointer" @click="window.scrollTo({ top: window.innerHeight * 0.85, behavior: 'smooth' })">
-                    <span class="text-[9px] font-bold uppercase tracking-[0.4em] rotate-90 origin-left ml-2 mb-4">Scroll</span>
-                    <div class="w-px h-16 bg-white/20 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1/2 bg-white animate-[scroll-down_2s_infinite]"></div>
-                    </div>
-                </div>
             </div>
         </div>
+
+        <x-scroll-indicator />
     </section>
 
     <!-- ── NEW ARRIVALS ──────────────────────────────────────────────────── -->
-    <section class="py-24 bg-white overflow-hidden">
-        <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16">
+    <section class="py-24 bg-white overflow-hidden reveal">
+        <div class="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12">
             <div class="text-center mb-16">
                 <div class="inline-flex gap-8 items-center mb-4">
                     <p class="w-8 md:w-16 h-[1px] bg-gray-300"></p>
@@ -63,7 +59,7 @@
                 @endforeach
             </div>
             <div class="mt-16 text-center">
-                <a href="{{ route('storefront.newArrivals') }}" class="inline-block border border-gray-800 px-12 py-4 text-[11px] font-bold tracking-[0.3em] uppercase text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-500">
+                <a href="{{ route('storefront.newArrivals') }}" class="inline-block border border-gray-800 px-12 py-4 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-500">
                     Explore New Arrivals
                 </a>
             </div>
@@ -71,7 +67,7 @@
     </section>
 
     <!-- ── BRAND PHILOSOPHY ─────────────────────────────────────────────── -->
-    <section class="py-40 bg-white overflow-hidden relative border-t border-b border-gray-50">
+    <section class="py-40 bg-white overflow-hidden relative border-t border-b border-gray-50 reveal">
         <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
             <div class="flex items-center justify-center gap-4 mb-20">
                 <p class="w-10 h-0.5 bg-gray-800"></p>
@@ -86,8 +82,8 @@
     </section>
 
     <!-- ── BEST SELLERS ─────────────────────────────────────────────────── -->
-    <section class="py-24 bg-white">
-        <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16">
+    <section class="py-24 bg-white reveal">
+        <div class="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12">
             <div class="text-center mb-16">
                 <div class="inline-flex gap-8 items-center mb-4">
                     <p class="w-8 md:w-16 h-[1px] bg-gray-300"></p>
@@ -105,7 +101,7 @@
                 @endforeach
             </div>
             <div class="mt-16 text-center">
-                <a href="{{ route('storefront.bestSellers') }}" class="inline-block border border-gray-800 px-12 py-4 text-[11px] font-bold tracking-[0.3em] uppercase text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-500">
+                <a href="{{ route('storefront.bestSellers') }}" class="inline-block border border-gray-800 px-12 py-4 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-500">
                     Explore Best Sellers
                 </a>
             </div>

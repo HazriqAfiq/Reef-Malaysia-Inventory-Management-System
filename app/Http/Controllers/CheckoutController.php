@@ -20,8 +20,15 @@ class CheckoutController extends Controller
     public function index()
     {
         $cart = session()->get('cart', []);
+        $selectedIds = session()->get('selected_cart_items', []);
+        
+        // Filter cart to only include selected items
+        if (!empty($selectedIds)) {
+            $cart = array_intersect_key($cart, array_flip($selectedIds));
+        }
+
         if (empty($cart)) {
-            return redirect()->route('storefront.index')->with('error', 'Your cart is empty.');
+            return redirect()->route('cart.index')->with('error', 'Please select at least one item to checkout.');
         }
 
         $variantIds = array_keys($cart);
@@ -59,8 +66,15 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $cart = session()->get('cart', []);
+        $selectedIds = session()->get('selected_cart_items', []);
+
+        // Filter cart to only include selected items
+        if (!empty($selectedIds)) {
+            $cart = array_intersect_key($cart, array_flip($selectedIds));
+        }
+
         if (empty($cart)) {
-            return redirect()->route('storefront.index');
+            return redirect()->route('cart.index')->with('error', 'Please select at least one item to checkout.');
         }
 
         $request->validate([

@@ -2,7 +2,7 @@
     <x-slot name="title">Checkout</x-slot>
 
     <div class="bg-white py-12 lg:py-24">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-16">
                 <h1 class="text-5xl font-luxury font-black italic">Finalize Order</h1>
             </div>
@@ -85,8 +85,8 @@
                         <div class="space-y-6 mb-10 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                             @foreach($checkoutItems as $item)
                                 <div class="flex items-center gap-4">
-                                    <div class="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 p-2">
-                                        <img src="{{ $item['variant']->product->primaryImage ? asset('storage/' . $item['variant']->product->primaryImage->image_path) : 'https://placehold.co/100x100?text=' . urlencode($item['variant']->product->name) }}" class="w-full h-full object-contain mix-blend-multiply" alt="{{ $item['variant']->product->name }}">
+                                    <div class="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                                        <img src="{{ $item['variant']->product->primaryImage ? asset('storage/' . $item['variant']->product->primaryImage->image_path) : 'https://placehold.co/100x100?text=' . urlencode($item['variant']->product->name) }}" class="w-full h-full object-cover" alt="{{ $item['variant']->product->name }}">
                                     </div>
                                     <div class="flex-1">
                                         <h4 class="text-[12px] font-black uppercase tracking-tight truncate w-32">{{ $item['variant']->product->name }}</h4>

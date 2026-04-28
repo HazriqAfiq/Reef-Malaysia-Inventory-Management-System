@@ -15,7 +15,7 @@ class SettingsController extends Controller
      */
     public function showPage($page = 'global')
     {
-        $validPages = ['global', 'homepage', 'collection', 'new_arrivals', 'best_sellers', 'promotions'];
+        $validPages = ['global', 'homepage', 'collection', 'new_arrivals', 'best_sellers', 'promotions', 'scent_finder', 'auth'];
         
         if (!in_array($page, $validPages)) {
             return redirect()->route('admin.settings.page', 'global');
@@ -73,6 +73,7 @@ class SettingsController extends Controller
                 // Determine folder based on key
                 $folder = 'hero';
                 if (str_contains($key, 'logo')) $folder = 'branding';
+                if (str_contains($key, 'sign_in') || str_contains($key, 'sign_up')) $folder = 'auth';
                 
                 $path = $file->storeAs($folder, $filename, 'public');
                 $dbPath = $folder . '/' . $filename;

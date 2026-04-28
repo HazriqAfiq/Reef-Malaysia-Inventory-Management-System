@@ -28,9 +28,11 @@
                 </div>
                 <p class="text-[11px] font-bold text-white uppercase tracking-[0.5em] drop-shadow-lg" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">{{ $settings['collection_description'] ?? 'Timeless Scents. Curated for You.' }}</p>
             </div>
+
+            <x-scroll-indicator />
         </header>
 
-        <div class="w-full px-4 sm:px-8 xl:px-16 py-12">
+        <div class="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-16">
             <div x-data="{ 
                 mobileFilters: false,
                 categories: @js(explode(',', request('category', ''))),

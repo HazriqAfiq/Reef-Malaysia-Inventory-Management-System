@@ -7,70 +7,72 @@
             ->take(2)->implode('');
     @endphp
 
-    <div class="bg-white min-h-screen">
+    <div class="bg-[#FBFBFD] min-h-screen">
 
         {{-- ── PAGE HEADER ─────────────────────────────────────────────── --}}
-        <div class="border-b border-gray-100 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-0">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8">
+        <div class="bg-white border-b border-gray-100/80">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
 
                     {{-- Avatar + Name --}}
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                            <span class="font-luxury text-lg text-white tracking-widest">{{ $initials }}</span>
+                    <div class="flex items-center gap-6">
+                        <div class="relative">
+                            <div class="w-16 h-16 rounded-3xl bg-gray-900 flex items-center justify-center flex-shrink-0 shadow-lg shadow-gray-200">
+                                <span class="text-xl text-white font-medium tracking-[0.3em] uppercase">{{ $initials }}</span>
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-4 border-white rounded-full"></div>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.45em] mb-1">My Account</p>
-                            <h1 class="font-luxury text-2xl md:text-3xl tracking-tight text-gray-900 leading-none">{{ Auth::user()->name }}</h1>
-                            <p class="text-[11px] text-gray-400 font-medium tracking-[0.15em] uppercase mt-1.5">{{ Auth::user()->email }}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.4em] mb-1.5">Member Dashboard</p>
+                            <h1 class="text-3xl md:text-4xl font-light tracking-[0.05em] text-gray-900 leading-none uppercase">{{ Auth::user()->name }}</h1>
                         </div>
                     </div>
 
-                    {{-- Sign Out --}}
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="text-[10px] font-bold text-gray-400 hover:text-black uppercase tracking-[0.3em] transition-colors pb-0.5 border-b border-gray-200 hover:border-black">
-                            Sign Out
-                        </button>
-                    </form>
+                    {{-- Actions --}}
+                    <div class="flex items-center gap-4">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    class="px-5 py-2.5 rounded-full text-[11px] font-bold text-gray-500 hover:text-black uppercase tracking-[0.2em] transition-all bg-gray-50 hover:bg-gray-100 border border-gray-100">
+                                Sign Out
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 {{-- ── TAB NAVIGATION ───────────────────────────────────────── --}}
-                <nav class="flex overflow-x-auto scrollbar-hide -mb-px">
-                    <a href="{{ route('account.index') }}"
-                       class="flex-shrink-0 px-1 mr-8 pt-2 pb-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-200 border-b-2 whitespace-nowrap
-                              {{ request()->routeIs('account.index') ? 'text-black border-black' : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300' }}">
-                        Overview
-                    </a>
-                    <a href="{{ route('account.orders') }}"
-                       class="flex-shrink-0 px-1 mr-8 pt-2 pb-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-200 border-b-2 whitespace-nowrap
-                              {{ request()->routeIs('account.orders') ? 'text-black border-black' : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300' }}">
-                        Orders
-                    </a>
-                    <a href="{{ route('account.addresses') }}"
-                       class="flex-shrink-0 px-1 mr-8 pt-2 pb-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-200 border-b-2 whitespace-nowrap
-                              {{ request()->routeIs('account.addresses') ? 'text-black border-black' : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300' }}">
-                        Addresses
-                    </a>
-                    <a href="{{ route('account.wishlist') }}"
-                       class="flex-shrink-0 px-1 mr-8 pt-2 pb-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-200 border-b-2 whitespace-nowrap
-                              {{ request()->routeIs('account.wishlist') ? 'text-black border-black' : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300' }}">
-                        Wishlist
-                    </a>
-                    <a href="{{ route('account.settings') }}"
-                       class="flex-shrink-0 px-1 pt-2 pb-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-200 border-b-2 whitespace-nowrap
-                              {{ request()->routeIs('account.settings') ? 'text-black border-black' : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300' }}">
-                        Settings
-                    </a>
+                <nav class="flex space-x-1 overflow-x-auto scrollbar-hide">
+                    @php
+                        $navItems = [
+                            ['route' => 'account.index', 'label' => 'Overview'],
+                            ['route' => 'account.orders', 'label' => 'Orders'],
+                            ['route' => 'account.addresses', 'label' => 'Addresses'],
+                            ['route' => 'account.wishlist', 'label' => 'Wishlist'],
+                            ['route' => 'account.settings', 'label' => 'Settings'],
+                        ];
+                    @endphp
+
+                    @foreach($navItems as $item)
+                        <a href="{{ route($item['route']) }}"
+                           class="group relative px-4 py-4 text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-300 whitespace-nowrap
+                                  {{ request()->routeIs($item['route']) ? 'text-black' : 'text-gray-400 hover:text-gray-600' }}">
+                            {{ $item['label'] }}
+                            @if(request()->routeIs($item['route']))
+                                <span class="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full"></span>
+                            @else
+                                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-200 group-hover:w-full transition-all duration-300 rounded-full"></span>
+                            @endif
+                        </a>
+                    @endforeach
                 </nav>
             </div>
         </div>
 
         {{-- ── PAGE CONTENT ─────────────────────────────────────────────── --}}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
             {{ $slot }}
         </div>
 
     </div>
 </x-storefront-layout>
+
