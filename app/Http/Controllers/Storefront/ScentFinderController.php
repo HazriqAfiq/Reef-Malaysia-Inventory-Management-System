@@ -27,61 +27,151 @@ class ScentFinderController extends Controller
         ]);
 
         $answers = Arr::get($validated, 'answers', []);
-        $scoringClauses = [];
+        
+        // Fetch all active products
+        $products = Product::active()
+            ->with(['variants', 'images'])
+            ->withSum('sales', 'quantity')
+            ->get();
 
-        if (($answers['vibe'] ?? null) === 'fresh') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%citrus%' THEN 3 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%bergamot%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%ocean%' THEN 2 ELSE 0 END)";
-        } elseif (($answers['vibe'] ?? null) === 'woody') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%sandalwood%' THEN 3 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%cedar%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%oud%' THEN 2 ELSE 0 END)";
-        } elseif (($answers['vibe'] ?? null) === 'floral') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(heart_note, '')) LIKE '%rose%' THEN 3 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(heart_note, '')) LIKE '%jasmine%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(heart_note, '')) LIKE '%lavender%' THEN 2 ELSE 0 END)";
+        $vibePref = $answers['vibe'] ?? null;
+        $timePref = $answers['time'] ?? null;
+        $intensityPref = $answers['intensity'] ?? null;
+
+        // Load Note Dictionary Config
+        $notesConfig = config('scent-notes.notes', []);
+        $familiesConfig = config('scent-notes.families', []);
+
+        // Find which families map to the user's selected vibe
+        $targetFamilies = [];
+        if ($vibePref) {
+            foreach ($familiesConfig as $famId => $famData) {
+                if (($famData['vibe'] ?? null) === $vibePref) {
+                    $targetFamilies[] = $famId;
+                }
+            }
         }
 
-        if (($answers['time'] ?? null) === 'day') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%citrus%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%green%' THEN 2 ELSE 0 END)";
-        } elseif (($answers['time'] ?? null) === 'night') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%oud%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%amber%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%musk%' THEN 2 ELSE 0 END)";
-        }
+        // Calculate score and accuracy for each product
+        $scoredProducts = $products->map(function ($product) use ($vibePref, $timePref, $intensityPref, $notesConfig, $targetFamilies) {
+            $score = 0;
+            $matchedNotes = [];
 
-        if (($answers['intensity'] ?? null) === 'subtle') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(heart_note, '')) LIKE '%lavender%' THEN 1 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(top_note, '')) LIKE '%green%' THEN 1 ELSE 0 END)";
-        } elseif (($answers['intensity'] ?? null) === 'bold') {
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%oud%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%patchouli%' THEN 2 ELSE 0 END)";
-            $scoringClauses[] = "(CASE WHEN LOWER(COALESCE(base_note, '')) LIKE '%amber%' THEN 1 ELSE 0 END)";
-        }
+            // Helper to clean and split comma/pipe/slash separated text into individual note blocks
+            $parseNotes = function ($noteText) {
+                if (empty($noteText)) return [];
+                return array_filter(array_map('trim', preg_split('/[\/|,|;]+/u', strtolower($noteText))));
+            };
 
-        $query = Product::active()->with(['variants', 'images'])->withSum('sales', 'quantity');
+            // Helper to perform robust substring matches
+            $hasNote = function ($noteKeyword, $notesList) {
+                foreach ($notesList as $note) {
+                    if (str_contains($note, $noteKeyword)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
 
-        if (count($scoringClauses) > 0) {
-            $scoreExpression = implode(' + ', $scoringClauses);
-            $query->selectRaw("products.*, ({$scoreExpression}) as scent_score")
-                ->orderByDesc('scent_score')
-                ->latest('id');
-        } else {
-            $query->latest();
-        }
+            $topNotesList = $parseNotes($product->top_note);
+            $heartNotesList = $parseNotes($product->heart_note);
+            $baseNotesList = $parseNotes($product->base_note);
 
-        $recommendations = $query->limit(4)->get();
+            // 1. SCENT VIBE SCORING
+            if ($vibePref) {
+                // Direct Fragrance Family Match Bonus (high confidence signal)
+                if (!empty($product->fragrance_family)) {
+                    $prodFam = strtolower($product->fragrance_family);
+                    if (in_array($prodFam, $targetFamilies)) {
+                        $score += 8; // Direct family match bonus
+                    }
+                }
 
-        if ($recommendations->isEmpty() && count($answers) > 0) {
-            $recommendations = Product::active()
-                ->with(['variants', 'images'])
-                ->withSum('sales', 'quantity')
-                ->latest('id')
-                ->limit(4)
-                ->get();
-        }
+                // Note-level vibe matches
+                foreach ($notesConfig as $noteKeyword => $meta) {
+                    $family = $meta['family'] ?? null;
+                    if (in_array($family, $targetFamilies)) {
+                        if ($hasNote($noteKeyword, $topNotesList)) {
+                            $score += 3; // Match in top layer
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $heartNotesList)) {
+                            $score += 2; // Match in heart layer
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $baseNotesList)) {
+                            $score += 1; // Match in base layer
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                    }
+                }
+            }
+
+            // 2. TIME OF DAY SCORING
+            if ($timePref) {
+                foreach ($notesConfig as $noteKeyword => $meta) {
+                    $timeBias = $meta['time'] ?? null;
+                    if ($timeBias === $timePref) {
+                        if ($hasNote($noteKeyword, $topNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $heartNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $baseNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                    }
+                }
+            }
+
+            // 3. INTENSITY SCORING
+            if ($intensityPref) {
+                foreach ($notesConfig as $noteKeyword => $meta) {
+                    $intensityBias = $meta['intensity'] ?? null;
+                    if ($intensityBias === $intensityPref) {
+                        if ($hasNote($noteKeyword, $topNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $heartNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                        if ($hasNote($noteKeyword, $baseNotesList)) {
+                            $score += 1.5;
+                            $matchedNotes[] = $noteKeyword;
+                        }
+                    }
+                }
+            }
+
+            // Compute realistic accuracy percentage matching high premium look feel
+            $baseAccuracy = 45;
+            if ($score > 0) {
+                $accuracy = min(99, $baseAccuracy + ($score * 3.5));
+            } else {
+                // Baseline soft accuracy match
+                $accuracy = min(68, 45 + (crc32($product->sku) % 20));
+            }
+
+            $product->scent_score = $score;
+            $product->scent_accuracy = round($accuracy);
+            $product->matched_notes = array_values(array_unique($matchedNotes));
+
+            return $product;
+        });
+
+        // Sort by score descending, then by ID descending to keep it consistent
+        $recommendations = $scoredProducts
+            ->sortByDesc(function ($product) {
+                return [$product->scent_score, $product->id];
+            })
+            ->values()
+            ->take(4);
 
         return view('storefront.scent-finder.results', compact('recommendations', 'answers'));
     }

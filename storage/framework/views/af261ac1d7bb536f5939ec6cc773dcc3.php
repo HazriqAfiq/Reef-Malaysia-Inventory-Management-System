@@ -89,9 +89,7 @@
                     $topMatch = $recommendations->first();
                     $otherMatches = $recommendations->skip(1);
                     
-                    // Logic for match accuracy percentage
-                    $score = $topMatch->scent_score ?? 0;
-                    $accuracy = min(99, 92 + ($score > 0 ? min(7, floor($score / 2)) : rand(0, 3)));
+                    $accuracy = $topMatch->scent_accuracy ?? 85;
                 ?>
                               <!-- ── SIGNATURE MATCH PREMIUM CARD ─────────────────────────── -->
                 <div class="mb-24 reveal">

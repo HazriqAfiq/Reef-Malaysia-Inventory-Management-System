@@ -57,21 +57,63 @@ class ProductSeeder extends Seeder
             $skuBase = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '-', $item['name']));
             $sku = trim($skuBase, '-') . '-' . $item['volume_ml'];
 
+            // Auto-detect fragrance family for seeding
+            $scores = ['fresh' => 0, 'floral' => 0, 'woody' => 0, 'oriental' => 0, 'gourmand' => 0];
+            $notesDict = [
+                'citrus' => 'fresh', 'bergamot' => 'fresh', 'ocean' => 'fresh', 'mandarin' => 'fresh', 'pear' => 'fresh', 'peach' => 'fresh', 'orange blossom' => 'floral', 'berries' => 'fresh', 'pineapple' => 'fresh', 'blackcurrant' => 'fresh', 'grapefruit' => 'fresh',
+                'rose' => 'floral', 'jasmine' => 'floral', 'lavender' => 'floral', 'peony' => 'floral', 'iris' => 'floral', 'lily of the valley' => 'floral', 'orris' => 'floral', 'floral notes' => 'floral', 'rosewood' => 'woody', 'violet' => 'floral',
+                'sandalwood' => 'woody', 'cedarwood' => 'woody', 'cedar' => 'woody', 'oud' => 'woody', 'oud resin' => 'woody', 'patchouli' => 'woody', 'vetiver' => 'woody', 'wood' => 'woody', 'earthy notes' => 'woody',
+                'amber' => 'oriental', 'golden amber' => 'oriental', 'musk' => 'oriental', 'white musk' => 'oriental', 'saffron' => 'oriental', 'leather' => 'oriental', 'cardamom' => 'oriental', 'spices' => 'oriental', 'black pepper' => 'oriental', 'pink pepper' => 'oriental', 'tonka' => 'oriental',
+                'caramel' => 'gourmand', 'vanilla' => 'gourmand', 'almond' => 'gourmand'
+            ];
+
+            $text = strtolower(($item['top_note'] ?? '') . ' ' . ($item['heart_note'] ?? '') . ' ' . ($item['base_note'] ?? ''));
+            foreach ($notesDict as $kw => $fam) {
+                if (str_contains($text, $kw)) {
+                    $scores[$fam]++;
+                }
+            }
+            arsort($scores);
+            $fragranceFamily = reset($scores) > 0 ? key($scores) : 'fresh';
+
+            // Look up or create category
+            $categoryName = ['men', 'woman', 'unisex'][array_rand(['men', 'woman', 'unisex'])];
+            $categoryId = \Illuminate\Support\Facades\DB::table('categories')
+                ->where('name', $categoryName)
+                ->value('id') ?? \Illuminate\Support\Facades\DB::table('categories')->insertGetId([
+                    'name' => $categoryName,
+                    'slug' => \Illuminate\Support\Str::slug($categoryName),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            // Look up or create product type
+            $typeName = match($item['type']) {
+                'classic', 'summer', 'niche' => 'Perfume sprays',
+                'blanc' => 'Hair mists',
+                default => 'Perfume sprays',
+            };
+            $productTypeId = \Illuminate\Support\Facades\DB::table('product_types')
+                ->where('name', $typeName)
+                ->value('id') ?? \Illuminate\Support\Facades\DB::table('product_types')->insertGetId([
+                    'name' => $typeName,
+                    'slug' => \Illuminate\Support\Str::slug($typeName),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
             Product::updateOrCreate(
                 ['sku' => $sku],
                 [
                     'name'         => $item['name'],
                     'slug'         => Str::slug($item['name'] . '-' . $item['volume_ml']),
                     'volume_ml'    => $item['volume_ml'],
-                    'type'         => match($item['type']) {
-                        'classic', 'summer', 'niche' => 'Perfume sprays',
-                        'blanc' => 'Hair mists',
-                        default => 'Perfume sprays',
-                    },
+                    'product_type_id' => $productTypeId,
+                    'category_id'     => $categoryId,
                     'top_note'     => $item['top_note'],
                     'heart_note'   => $item['heart_note'],
                     'base_note'    => $item['base_note'],
-                    'category'     => ['men', 'woman', 'unisex'][array_rand(['men', 'woman', 'unisex'])],
+                    'fragrance_family' => $fragranceFamily,
                     'description'  => $item['top_note'] . ' | ' . $item['heart_note'] . ' | ' . $item['base_note'],
                     'wholesale_price' => rand(180, 250),
                     'retail_price'    => rand(320, 399),
